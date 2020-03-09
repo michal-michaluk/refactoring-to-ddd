@@ -16,7 +16,7 @@ Poprawa jakości testów
 - czy lepszy jest builder?
 
 4. rozdziel given i when
-- ukryj wywołanie metody pod testami w prywatnej metodie testu
+- ukryj wywołanie metody pod testami w prywatnej metodzie testu
 - dane testowe przekaż przez pola klasy, a nie przez parametry metody
 - czy warto wydzielić do osobnej klasy nowe pola i metodę?
 
