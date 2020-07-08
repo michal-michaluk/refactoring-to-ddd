@@ -5,7 +5,6 @@ import entities.ProductionEntity;
 import entities.ShortageEntity;
 import enums.DeliverySchema;
 import external.CurrentStock;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,22 +40,6 @@ public class ShortageFinder {
      */
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
                                                      List<ProductionEntity> productions, List<DemandEntity> demands) {
-
-        // Coding Dojo Refactoring to Domain Model
-        // 1st goal: cut off dependencies to production-planing internals
-        // get rid of dependency to List<ProductionEntity> productions
-        // introduce *Custom Collection* called ProductionOutputs
-        // with interface getOutput(date)
-        // move initialisation of ProductionOutputs to separate method
-
-        // 2nd goal: cut off dependencies to demand-forecasting internals
-        // get rid of dependency to List<DemandEntity> demands
-        // introduce *Custom Collection* called Demands
-        // with interface getDemand(date) -> DailyDemand
-        // introduce *Value Object* called DailyDemand
-        // with interface getLevel -> long
-        //                hasDeliverySchema(deliverySchema) -> true/false
-        // move initialisation of Demands to separate method
 
         List<LocalDate> dates = Stream.iterate(today, date -> date.plusDays(1))
                 .limit(daysAhead)
@@ -101,10 +84,10 @@ public class ShortageFinder {
                 levelOnDelivery = level - Util.getLevel(demand) + produced;
             } else if (Util.getDeliverySchema(demand) == DeliverySchema.every3hours) {
                 // TODO WTF ?? we need to rewrite that app :/
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             } else {
                 // TODO implement other variants
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
 
             if (levelOnDelivery < 0) {

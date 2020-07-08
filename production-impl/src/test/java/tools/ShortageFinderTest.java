@@ -27,12 +27,12 @@ public class ShortageFinderTest {
     @Test
     public void findShortages() {
         given(
-                stock(1000),
+                warehouseStock(1000),
                 productPlan(forProductionLine(0)
                         .plannedOutputs(date, 7, 6300, 6300, 6300, 6300, 6300, 6300, 6300)
                         .plannedOutputs(date, 14, 6300, 6300, 6300, 6300, 6300, 6300, 6300)
                 ),
-                demands(date.plusDays(1), 17000, 17000)
+                customerDemands(date.plusDays(1), 17000, 17000)
         );
 
         whenShortagesArePredicted();
@@ -68,11 +68,11 @@ public class ShortageFinderTest {
                 .collect(Collectors.toList());
     }
 
-    private CurrentStock stock(int stockLevel) {
+    private CurrentStock warehouseStock(int stockLevel) {
         return new CurrentStock(stockLevel, 200);
     }
 
-    private List<DemandEntity> demands(LocalDate date, int... demand) {
+    private List<DemandEntity> customerDemands(LocalDate date, int... demand) {
         return ExampleDemands.demandSequence(date, demand)
                 .map(ExampleDemands.DemandBuilder::build)
                 .collect(Collectors.toList());
