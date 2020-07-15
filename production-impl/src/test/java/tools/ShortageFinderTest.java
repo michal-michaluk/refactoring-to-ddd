@@ -1,80 +1,130 @@
 package tools;
 
-import entities.DemandEntity;
-import entities.ProductionEntity;
-import entities.ShortageEntity;
+import entities.*;
+import enums.DeliverySchema;
 import external.CurrentStock;
+import org.junit.Assert;
 import org.junit.Test;
-import tools.ExampleProductions.ProductionBuilder;
-import tools.ExampleProductions.ProductionPlanBuilder;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static tools.ExampleProductions.ProductionPlanBuilder.forProductionLine;
-import static tools.ShortagesAssert.assertThat;
+import static java.util.Arrays.asList;
 
 public class ShortageFinderTest {
 
+    AtomicLong ids = new AtomicLong(0);
     private LocalDate date = LocalDate.now();
-
-    private CurrentStock stock;
-    private List<ProductionEntity> productions;
-    private List<DemandEntity> demands;
-    private List<ShortageEntity> foundShortages;
 
     @Test
     public void findShortages() {
-        given(
-                warehouseStock(1000),
-                productPlan(forProductionLine(0)
-                        .plannedOutputs(date, 7, 6300, 6300, 6300, 6300, 6300, 6300, 6300)
-                        .plannedOutputs(date, 14, 6300, 6300, 6300, 6300, 6300, 6300, 6300)
-                ),
-                customerDemands(date.plusDays(1), 17000, 17000)
-        );
-
-        whenShortagesArePredicted();
-
-        thenPredicted()
-                .shortagesAtDates(date.plusDays(1), date.plusDays(2))
-                .missingPartsAt(date.plusDays(1), 3400)
-                .missingPartsAt(date.plusDays(2), 4400);
-    }
-
-    private void given(CurrentStock stock, List<ProductionEntity> productions, List<DemandEntity> demands) {
-        this.stock = stock;
-        this.productions = productions;
-        this.demands = demands;
-    }
-
-    private void whenShortagesArePredicted() {
-        foundShortages = ShortageFinder.findShortages(
+        CurrentStock stock = new CurrentStock(1000, 200);
+        print(stock);
+        List<ShortageEntity> shortages = ShortageFinder.findShortages(
                 date.plusDays(1), 7,
                 stock,
-                productions,
-                demands
+                productions(
+                        prod(0, 1, 7), prod(0, 1, 14),
+                        prod(0, 2, 7), prod(0, 2, 14),
+                        prod(0, 3, 7), prod(0, 3, 14),
+                        prod(0, 4, 7), prod(0, 4, 14),
+                        prod(0, 5, 7), prod(0, 5, 14),
+                        prod(0, 6, 7), prod(0, 6, 14),
+                        prod(0, 7, 7), prod(0, 7, 14)
+                ),
+                demands(demand(2, 17000), demand(3, 17000))
         );
+        print(shortages);
+        Assert.assertEquals(2, shortages.size());
+        Assert.assertEquals(date.plusDays(2), shortages.get(0).getAtDay());
+        Assert.assertEquals(3400, shortages.get(0).getMissing());
+        Assert.assertEquals(date.plusDays(3), shortages.get(1).getAtDay());
+        Assert.assertEquals(7800, shortages.get(1).getMissing());
     }
 
-    private ShortagesAssert thenPredicted() {
-        return assertThat(foundShortages);
+    private void print(CurrentStock stock) {
+        System.out.println("shortages: " + stock.getLevel());
     }
 
-    private List<ProductionEntity> productPlan(ProductionPlanBuilder productions) {
-        return productions.build()
-                .map(ProductionBuilder::build)
-                .collect(Collectors.toList());
+    private void print(List<ShortageEntity> shortages) {
+        System.out.println("shortages: " + shortages.stream().map(s -> s.getAtDay() + " " + s.getMissing())
+                .collect(Collectors.joining(", ")));
     }
 
-    private CurrentStock warehouseStock(int stockLevel) {
-        return new CurrentStock(stockLevel, 200);
+    private List<ProductionEntity> productions(ProductionEntity... productions) {
+        System.out.println("production: " + Stream.of(productions)
+                .map(prod -> prod.getStart().toLocalDate() + " " + prod.getOutput())
+                .collect(Collectors.joining(", ")));
+        return asList(productions);
     }
 
-    private List<DemandEntity> customerDemands(LocalDate date, int... demand) {
-        return ExampleDemands.demandSequence(date, demand)
-                .map(ExampleDemands.DemandBuilder::build)
-                .collect(Collectors.toList());
+    private List<DemandEntity> demands(DemandEntity... demands) {
+        System.out.println("demands: " + Stream.of(demands)
+                .map(prod -> prod.getDay() + " " + prod.getOriginal().getLevel())
+                .collect(Collectors.joining(", ")));
+        return asList(demands);
+    }
+
+    private DemandEntity demand(int plusDays, int level) {
+        DemandEntity entity = new DemandEntity();
+        entity.setId(ids.getAndIncrement());
+        entity.setCallofDate(date.minusDays(2));
+        entity.setProductRefNo("300900");
+        entity.setAtDay(date.plusDays(plusDays));
+        OriginalDemandEntity original = new OriginalDemandEntity();
+        original.setAtDay(date.plusDays(plusDays));
+        original.setLevel(level);
+        original.setDeliverySchema(DeliverySchema.atDayStart);
+        entity.setOriginal(original);
+        entity.setAdjustment(new ArrayList<>());
+        return entity;
+    }
+
+    private ProductionEntity prod(long lineId, int plusDays, int hour) {
+        ProductionEntity entity = new ProductionEntity();
+        LineEntity line = createLine(lineId);
+        FormEntity form = createForm300900();
+        entity.setProductionId(ids.getAndIncrement());
+        entity.setLine(line);
+        entity.setForm(form);
+        entity.setStart(date.plusDays(plusDays).atTime(hour, 0));
+        entity.setDuration(Duration.ofHours(4));
+        entity.setStartAndWormUp(Duration.ofMinutes(20));
+        entity.setEndAndCleaning(Duration.ofMinutes(10));
+        entity.setSpeed(1.0);
+        entity.setOutput(
+                (long) (entity.getSpeed() *
+                        entity.getDuration()
+                                .minus(entity.getStartAndWormUp())
+                                .minus(entity.getEndAndCleaning()).getSeconds()
+                        / 60 * form.getOutputPerMinute())
+        );
+        entity.setUtilization(2.0);
+        entity.setColor(null);
+        entity.setNote(null);
+        return entity;
+    }
+
+    private LineEntity createLine(long id) {
+        LineEntity line = new LineEntity();
+        line.setId(id);
+        line.setMaxWeight(10_000);
+        return line;
+    }
+
+    private FormEntity createForm300900() {
+        FormEntity form = new FormEntity();
+        form.setRefNo("300900");
+        form.setOutputPerMinute(30);
+        form.setUtilization(2.0);
+        form.setWeight(5_000);
+        form.setStartAndWormUp(Duration.ofMinutes(20));
+        form.setEndAndCleaning(Duration.ofMinutes(10));
+        return form;
     }
 }

@@ -59,8 +59,6 @@ public class ShortageFinder {
             demandsPerDay.put(demand1.getDay(), demand1);
         }
 
-        // TODO ASK including locked or only proper parts
-        // TODO ASK current stock or on day start? what if we are in the middle of production a day?
         long level = stock.getLevel();
 
         List<ShortageEntity> gap = new LinkedList<>();
@@ -99,7 +97,6 @@ public class ShortageFinder {
                 gap.add(entity);
             }
             long endOfDayLevel = level + produced - Util.getLevel(demand);
-            // TODO: ASK accumulated shortages or reset when under zero?
             level = endOfDayLevel >= 0 ? endOfDayLevel : 0;
         }
         return gap;
