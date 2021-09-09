@@ -1,0 +1,24 @@
+modelEncoding: UTF-8
+modelVersion: 4.0.0
+groupId: com.bottega
+artifactId: refactoring-legacy
+version: 1.0-SNAPSHOT
+packaging: pom
+
+modules:
+  - production-api
+  - production-impl
+  - production-persistence
+
+build:
+  plugins:
+    - groupId: org.apache.maven.plugins
+      artifactId: maven-compiler-plugin
+      version: 3.8.0
+      configuration: { release: 17, compilerArgs: --enable-preview }
+    - groupId: org.apache.maven.plugins
+      artifactId: maven-surefire-plugin
+      version: 2.22.2
+      configuration: { argLine: --enable-preview }
+
+childProjectUrlInheritAppendPath: true

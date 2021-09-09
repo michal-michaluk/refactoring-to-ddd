@@ -1,0 +1,28 @@
+modelEncoding: UTF-8
+modelVersion: 4.0.0
+groupId: com.bottega
+artifactId: production-impl
+version: 1.0-SNAPSHOT
+packaging: jar
+
+dependencies:
+  - { groupId: org.projectlombok, artifactId: lombok, version: 1.18.20 }
+  - { groupId: com.bottega, artifactId: production-api, version: 1.0-SNAPSHOT }
+  - { groupId: com.bottega, artifactId: production-persistence, version: 1.0-SNAPSHOT }
+  - { groupId: com.fasterxml.jackson.module, artifactId: jackson-module-parameter-names,
+      version: 2.11.1 }
+  - { groupId: junit, artifactId: junit, version: 4.13.2, scope: test }
+  - { groupId: org.assertj, artifactId: assertj-core, version: 3.20.2, scope: test }
+
+build:
+  plugins:
+    - groupId: org.apache.maven.plugins
+      artifactId: maven-compiler-plugin
+      version: 3.8.0
+      configuration: { release: 17, compilerArgs: --enable-preview }
+    - groupId: org.apache.maven.plugins
+      artifactId: maven-surefire-plugin
+      version: 2.22.2
+      configuration: { argLine: --enable-preview }
+
+childProjectUrlInheritAppendPath: true
