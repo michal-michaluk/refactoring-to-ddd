@@ -14,22 +14,27 @@ import java.util.List;
 
 public class ShortageFinderACL {
 
-    private static boolean useLegacyCalculation = true;
+    private static boolean compareWithNewModel = true;
 
     private ShortageFinderACL() {
     }
 
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
                                                      List<ProductionEntity> productions, List<DemandEntity> demands) {
-        if (useLegacyCalculation) {
-            return ShortageFinder.findShortages(today, daysAhead, stock, productions, demands);
-        } else {
+        List<ShortageEntity> oldCalculation = ShortageFinder.findShortages(today, daysAhead, stock, productions, demands);
+        if (compareWithNewModel) {
             ShortagePredictionFactory factory = new ShortagePredictionFactoryACL(today, daysAhead, stock, productions, demands);
             ShortagePredictionService service = new ShortagePredictionService(factory);
             Shortage shortage = service.predictShortages();
 
-            return translateToLegacy(shortage);
+            List<ShortageEntity> newCalculation = translateToLegacy(shortage);
+            diff(oldCalculation, newCalculation);
         }
+        return oldCalculation;
+    }
+
+    private static void diff(List<ShortageEntity> oldCalculation, List<ShortageEntity> newCalculation) {
+
     }
 
     private static List<ShortageEntity> translateToLegacy(Shortage shortage) {
