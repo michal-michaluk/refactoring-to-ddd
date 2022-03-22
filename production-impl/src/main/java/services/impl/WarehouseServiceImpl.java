@@ -1,5 +1,6 @@
 package services.impl;
 
+import acl.ShortageFinderACL;
 import api.DeliveryNote;
 import api.StorageUnit;
 import api.WarehouseService;
@@ -11,7 +12,6 @@ import external.CurrentStock;
 import external.JiraService;
 import external.NotificationsService;
 import external.StockService;
-import tools.ShortageFinder;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -66,7 +66,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     public void processShortages(String productRefNo) {
         LocalDate today = LocalDate.now(clock);
         CurrentStock currentStock = stockService.getCurrentStock(productRefNo);
-        List<ShortageEntity> shortages = ShortageFinder.findShortages(
+        List<ShortageEntity> shortages = ShortageFinderACL.findShortages(
                 today, confShortagePredictionDaysAhead,
                 currentStock,
                 productionDao.findFromTime(productRefNo, today.atStartOfDay()),

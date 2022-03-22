@@ -29,6 +29,7 @@ public class ShortageFinderACL {
 
             List<ShortageEntity> newCalculation = translateToLegacy(shortage);
             diff(oldCalculation, newCalculation);
+            return newCalculation;
         }
         return oldCalculation;
     }

@@ -1,5 +1,6 @@
 package tools;
 
+import acl.ShortageFinderACL;
 import entities.*;
 import enums.DeliverySchema;
 import external.CurrentStock;
@@ -25,7 +26,7 @@ public class ShortageFinderTest {
     public void findShortages() {
         CurrentStock stock = new CurrentStock(1000, 200);
         print(stock);
-        List<ShortageEntity> shortages = ShortageFinder.findShortages(
+        List<ShortageEntity> shortages = ShortageFinderACL.findShortages(
                 date.plusDays(1), 7,
                 stock,
                 productions(
