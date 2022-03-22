@@ -1,24 +1,15 @@
 package shortage.prediction;
 
-import entities.DemandEntity;
 import enums.DeliverySchema;
-import tools.Util;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Demands {
-    private final Map<LocalDate, DemandEntity> demands;
+    private final Map<LocalDate, DailyDemand> demands;
 
-    public Demands(List<DemandEntity> demands) {
-        Map<LocalDate, DemandEntity> demandsPerDay = new HashMap<>();
-        for (DemandEntity demand1 : demands) {
-            demandsPerDay.put(demand1.getDay(), demand1);
-        }
-        this.demands = Collections.unmodifiableMap(demandsPerDay);
+    public Demands(Map<LocalDate, DailyDemand> demands) {
+        this.demands = demands;
     }
 
     public boolean notContains(LocalDate day) {
@@ -29,22 +20,24 @@ public class Demands {
         if (!demands.containsKey(day)) {
             return null;
         }
-        return new DailyDemand(demands.get(day));
+        return demands.get(day);
     }
 
     public static class DailyDemand {
-        private final DemandEntity demand;
+        private final long demand;
+        private final DeliverySchema schema;
 
-        public DailyDemand(DemandEntity demand) {
+        public DailyDemand(long demand, DeliverySchema schema) {
             this.demand = demand;
+            this.schema = schema;
         }
 
         public long levelOnDelivery(long level, long produced) {
-            if (getDeliverySchema() == DeliverySchema.atDayStart) {
-                return level - getLevel();
-            } else if (getDeliverySchema() == DeliverySchema.tillEndOfDay) {
-                return level - getLevel() + produced;
-            } else if (getDeliverySchema() == DeliverySchema.every3hours) {
+            if (schema == DeliverySchema.atDayStart) {
+                return level - demand;
+            } else if (schema == DeliverySchema.tillEndOfDay) {
+                return level - demand + produced;
+            } else if (schema == DeliverySchema.every3hours) {
                 // TODO WTF ?? we need to rewrite that app :/
                 throw new UnsupportedOperationException();
             } else {
@@ -54,15 +47,7 @@ public class Demands {
         }
 
         public long endOfDayLevel(long level, long produced) {
-            return level + produced - getLevel();
-        }
-
-        private DeliverySchema getDeliverySchema() {
-            return Util.getDeliverySchema(demand);
-        }
-
-        public long getLevel() {
-            return Util.getLevel(demand);
+            return level + produced - demand;
         }
     }
 }
