@@ -39,7 +39,25 @@ public class Demands {
             this.demand = demand;
         }
 
-        public DeliverySchema getDeliverySchema() {
+        public long levelOnDelivery(long level, long produced) {
+            if (getDeliverySchema() == DeliverySchema.atDayStart) {
+                return level - getLevel();
+            } else if (getDeliverySchema() == DeliverySchema.tillEndOfDay) {
+                return level - getLevel() + produced;
+            } else if (getDeliverySchema() == DeliverySchema.every3hours) {
+                // TODO WTF ?? we need to rewrite that app :/
+                throw new UnsupportedOperationException();
+            } else {
+                // TODO implement other variants
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        public long endOfDayLevel(long level, long produced) {
+            return level + produced - getLevel();
+        }
+
+        private DeliverySchema getDeliverySchema() {
             return Util.getDeliverySchema(demand);
         }
 
