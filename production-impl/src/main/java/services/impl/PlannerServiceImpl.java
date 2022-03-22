@@ -97,7 +97,7 @@ public class PlannerServiceImpl implements PlannerService {
         productionDao.save(newScheduled);
 
         // Shortages may arise if insufficient production was planned.
-        shortages.processShortages(changed);
+        shortages.processShortagesAfterPlanChanged(changed.stream().map(production -> production.getForm().getRefNo()).toList());
     }
 
     /**
@@ -132,7 +132,7 @@ public class PlannerServiceImpl implements PlannerService {
         production.setDuration(duration);
 
         // Shortages may arise if insufficient production was planned.
-        shortages.processShortages(changed);
+        shortages.processShortagesAfterPlanChanged(changed.stream().map(production -> production.getForm().getRefNo()).toList());
     }
 
     //Transactional

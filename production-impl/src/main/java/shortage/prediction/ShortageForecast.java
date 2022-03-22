@@ -1,17 +1,16 @@
 package shortage.prediction;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public class ShortageForecast {
+    private final DateRange dates;
     private final WarehouseStock stock;
-    private final List<LocalDate> dates;
     private final ProductionOutputs outputs;
     private final Demands demandsPerDay;
 
-    public ShortageForecast(WarehouseStock stock, List<LocalDate> dates, ProductionOutputs outputs, Demands demandsPerDay) {
-        this.stock = stock;
+    public ShortageForecast(DateRange dates, WarehouseStock stock, ProductionOutputs outputs, Demands demandsPerDay) {
         this.dates = dates;
+        this.stock = stock;
         this.outputs = outputs;
         this.demandsPerDay = demandsPerDay;
     }
@@ -20,7 +19,7 @@ public class ShortageForecast {
         long level = stock.level();
 
         Shortage gap = new Shortage(outputs.getProductRefNo());
-        for (LocalDate day : dates) {
+        for (LocalDate day : dates.list()) {
             if (demandsPerDay.notContains(day)) {
                 level += outputs.getLevel(day);
                 continue;
@@ -39,5 +38,9 @@ public class ShortageForecast {
             level = endOfDayLevel >= 0 ? endOfDayLevel : 0;
         }
         return gap;
+    }
+
+    public boolean hasAnyLocked() {
+        return stock.locked() > 0;
     }
 }

@@ -1,13 +1,19 @@
 package acl;
 
+import dao.ProductionDao;
 import entities.ProductionEntity;
 import shortage.prediction.ProductionOutputs;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 class ShortagesProductionMediator {
-    ProductionOutputs createProductionOutputs(List<ProductionEntity> productions) {
+    private ProductionDao productionDao;
+
+    ProductionOutputs createProductionOutputs(String refNo, LocalDate today) {
+        List<ProductionEntity> productions = productionDao.findFromTime(refNo, today.atStartOfDay());
+
         return new ProductionOutputs(
                 productions.stream()
                         .map(production -> production.getForm().getRefNo())
