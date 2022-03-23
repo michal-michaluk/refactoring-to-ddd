@@ -1,36 +1,60 @@
 package shortage.prediction;
 
-import entities.ShortageEntity;
-
 import java.time.LocalDate;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.BiFunction;
 
 public class Shortage {
     private final String productRefNo;
-    private final List<ShortageEntity> shortages;
+    private final LocalDate found;
+    private final SortedMap<LocalDate, Long> shortages;
 
-    public Shortage(String productRefNo) {
+    public Shortage(String productRefNo, LocalDate found, SortedMap<LocalDate, Long> shortages) {
         this.productRefNo = productRefNo;
-        this.shortages = new LinkedList<>();
-    }
-
-    public Shortage(String productRefNo, List<ShortageEntity> shortages) {
-        this.productRefNo = productRefNo;
+        this.found = found;
         this.shortages = shortages;
     }
 
-    public void add(LocalDate day, long missing) {
-        ShortageEntity entity = new ShortageEntity();
-        entity.setRefNo(productRefNo);
-        entity.setFound(LocalDate.now());
-        entity.setAtDay(day);
-        entity.setMissing(Math.abs(missing));
-        shortages.add(entity);
+    static Builder builder(String productRefNo) {
+        return new Builder(productRefNo);
     }
 
-    public List<ShortageEntity> toList() {
-        return shortages;
+    public String refNo() {
+        return productRefNo;
+    }
+
+    public LocalDate found() {
+        return found;
+    }
+
+    public <T> List<T> map(BiFunction<LocalDate, Long, T> fun) {
+        return shortages.entrySet().stream()
+                .map(e -> fun.apply(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    public static class Builder {
+        private final String productRefNo;
+        private final SortedMap<LocalDate, Long> shortages = new TreeMap<>();
+
+        public Builder(String productRefNo) {
+            this.productRefNo = productRefNo;
+        }
+
+        public void add(LocalDate day, long missing) {
+            shortages.put(day, Math.abs(missing));
+        }
+
+        public Shortage build() {
+            return new Shortage(
+                    productRefNo,
+                    LocalDate.now(),
+                    Collections.unmodifiableSortedMap(shortages)
+            );
+        }
     }
 
     public boolean newShortagesThan(Shortage other) {
@@ -50,6 +74,6 @@ public class Shortage {
     }
 
     public boolean hasShortageBefore(LocalDate date) {
-        return shortages.get(0).getAtDay().isBefore(date);
+        return shortages.firstKey().isBefore(date);
     }
 }

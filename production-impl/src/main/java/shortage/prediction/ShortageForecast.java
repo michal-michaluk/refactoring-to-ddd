@@ -18,7 +18,7 @@ public class ShortageForecast {
     public Shortage predictShortages() {
         long level = stock.level();
 
-        Shortage gap = new Shortage(outputs.getProductRefNo());
+        Shortage.Builder shortages = Shortage.builder(outputs.getProductRefNo());
         for (LocalDate day : dates.list()) {
             if (demandsPerDay.notContains(day)) {
                 level += outputs.getLevel(day);
@@ -31,13 +31,13 @@ public class ShortageForecast {
             long levelOnDelivery = demand.levelOnDelivery(level, produced);
 
             if (levelOnDelivery < 0) {
-                gap.add(day, levelOnDelivery);
+                shortages.add(day, levelOnDelivery);
             }
 
             long endOfDayLevel = demand.endOfDayLevel(level, produced);
             level = endOfDayLevel >= 0 ? endOfDayLevel : 0;
         }
-        return gap;
+        return shortages.build();
     }
 
     public boolean hasAnyLocked() {
