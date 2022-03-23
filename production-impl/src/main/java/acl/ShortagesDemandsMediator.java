@@ -3,7 +3,6 @@ package acl;
 import dao.DemandDao;
 import entities.DemandEntity;
 import shortage.prediction.Demands;
-import tools.Util;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,8 +18,8 @@ class ShortagesDemandsMediator {
                 .collect(Collectors.toMap(
                                 DemandEntity::getDay,
                                 demand -> new Demands.DailyDemand(
-                                        Util.getLevel(demand),
-                                        Util.getDeliverySchema(demand))
+                                        demand.getLevel(),
+                                        demand.getDeliverySchema())
                         )
                 ));
     }
