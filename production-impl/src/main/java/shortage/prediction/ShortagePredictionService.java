@@ -1,8 +1,5 @@
 package shortage.prediction;
 
-import external.JiraService;
-import external.NotificationsService;
-
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -11,18 +8,16 @@ public class ShortagePredictionService {
     private final ShortageRepository shortages;
     private final ShortagePredictionRepository forecasts;
 
-    private final NotificationsService notificationService;
-    private final JiraService jiraService;
+    private final Notifications notification;
     private final Clock clock;
 
     private final int confShortagePredictionDaysAhead;
     private final long confIncreaseQATaskPriorityInDays;
 
-    public ShortagePredictionService(ShortageRepository shortages, ShortagePredictionRepository forecasts, NotificationsService notificationService, JiraService jiraService, Clock clock, int confShortagePredictionDaysAhead, long confIncreaseQATaskPriorityInDays) {
+    public ShortagePredictionService(ShortageRepository shortages, ShortagePredictionRepository forecasts, Notifications notification, Clock clock, int confShortagePredictionDaysAhead, long confIncreaseQATaskPriorityInDays) {
         this.shortages = shortages;
         this.forecasts = forecasts;
-        this.notificationService = notificationService;
-        this.jiraService = jiraService;
+        this.notification = notification;
         this.clock = clock;
         this.confShortagePredictionDaysAhead = confShortagePredictionDaysAhead;
         this.confIncreaseQATaskPriorityInDays = confIncreaseQATaskPriorityInDays;
@@ -37,10 +32,10 @@ public class ShortagePredictionService {
             Shortage calculated = forecast.predictShortages();
             Shortage previous = shortages.get(refNo);
             if (calculated.newShortagesThan(previous)) {
-                notificationService.markOnPlan(calculated.toList());
+                notification.markOnPlan(calculated);
                 if (forecast.hasAnyLocked() &&
                         calculated.hasShortageBefore(today.plusDays(confIncreaseQATaskPriorityInDays))) {
-                    jiraService.increasePriorityFor(refNo);
+                    notification.increasePriorityFor(refNo);
                 }
                 shortages.save(calculated);
             }
@@ -59,11 +54,11 @@ public class ShortagePredictionService {
 
         // TODO REFACTOR: lookup for shortages -> ShortageFound / ShortagesGone
         if (calculated.newShortagesThan(previous)) {
-            notificationService.alertPlanner(calculated.toList());
+            notification.alertPlanner(calculated);
             // TODO REFACTOR: policy why to increase task priority
             if (forecast.hasAnyLocked() &&
                     calculated.hasShortageBefore(today.plusDays(confIncreaseQATaskPriorityInDays))) {
-                jiraService.increasePriorityFor(productRefNo);
+                notification.increasePriorityFor(productRefNo);
             }
             shortages.save(calculated);
         }
@@ -80,10 +75,10 @@ public class ShortagePredictionService {
         Shortage previous = shortages.get(productRefNo);
 
         if (calculated.newShortagesThan(previous)) {
-            notificationService.softNotifyPlanner(calculated.toList());
+            notification.softNotifyPlanner(calculated);
             if (forecast.hasAnyLocked() &&
                     calculated.hasShortageBefore(today.plusDays(confIncreaseQATaskPriorityInDays))) {
-                jiraService.increasePriorityFor(productRefNo);
+                notification.increasePriorityFor(productRefNo);
             }
             shortages.save(calculated);
         }
@@ -101,10 +96,10 @@ public class ShortagePredictionService {
             Shortage previous = shortages.get(productRefNo);
 
             if (calculated.newShortagesThan(previous)) {
-                notificationService.alertPlanner(calculated.toList());
+                notification.alertPlanner(calculated);
                 if (forecast.hasAnyLocked() &&
                         calculated.hasShortageBefore(today.plusDays(confIncreaseQATaskPriorityInDays))) {
-                    jiraService.increasePriorityFor(productRefNo);
+                    notification.increasePriorityFor(productRefNo);
                 }
                 shortages.save(calculated);
             }

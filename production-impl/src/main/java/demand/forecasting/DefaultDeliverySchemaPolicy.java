@@ -1,4 +1,4 @@
-package entities;
+package demand.forecasting;
 
 import enums.DeliverySchema;
 

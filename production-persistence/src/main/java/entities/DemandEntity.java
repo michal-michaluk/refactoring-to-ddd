@@ -1,7 +1,5 @@
 package entities;
 
-import enums.DeliverySchema;
-
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,27 +18,6 @@ public class DemandEntity {
     private List<ManualAdjustmentEntity> adjustment = new LinkedList<>();
 
     public DemandEntity() {
-    }
-
-    public long getLevel() {
-        if (adjustment.isEmpty()) {
-            return original.getLevel();
-        } else {
-            return adjustment.get(adjustment.size() - 1).getLevel();
-        }
-    }
-
-    public DeliverySchema getDeliverySchema() {
-        DeliverySchema deliverySchema;
-        if (adjustment.isEmpty()) {
-            deliverySchema = original.getDeliverySchema();
-        } else {
-            deliverySchema = adjustment.get(adjustment.size() - 1).getDeliverySchema();
-        }
-        if (deliverySchema == null) {
-            return DefaultDeliverySchemaPolicy.defaultFor(productRefNo);
-        }
-        return deliverySchema;
     }
 
     public long getId() {
